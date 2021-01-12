@@ -3,7 +3,9 @@
 ## Azure AD
 
 Identity Management - users, groups and other metadata
+
 Enterprise Access Management - apps, sso, device management
+
 Identity and Access Security - MFA, just-in-time access, identity protection, risk monitoring
 
 ### Implementing Azure AD
