@@ -1,0 +1,8 @@
+# Create a Resource Group
+az group create --name "rg-eu-vnet" --location westeurope
+
+# Create a new VNet
+az network vnet create --name "vnet1" --resource-group "rg-eu-vnet" --address-prefixes 10.1.0.0/16
+
+# Create a subnet and associate with the VNet
+az network vnet subnet create --name "subnet1" --vnet-name "vnet1" --resource-group "rg-eu-vnet" --address-prefixes 10.1.1.0/24
