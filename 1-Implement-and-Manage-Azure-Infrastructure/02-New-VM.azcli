@@ -1,0 +1,12 @@
+# Create a new Ubuntu VM
+
+rgName="rg-eu-vms"
+vmName="vm2"
+vnetName="VNet1"
+subnetName="Subnet1"
+nicName="vm2-NIC"
+
+az network nic create --resource-group $rgName --name $nicName --vnet-name $vnetName --subnet $subnetName
+
+# az vm create --resource-group $rgName --name $vmName --nics $nicName --image win2019datacenter --admin-username azureuser --admin-password "SecurePassword" --size Basic_A1
+az vm create --resource-group $rgName --name $vmName --nics $nicName --image UbuntuLTS --admin-username azureuser --size Basic_A1 --generate-ssh-keys

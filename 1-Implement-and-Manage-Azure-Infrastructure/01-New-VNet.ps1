@@ -6,9 +6,6 @@ $location = "West Europe"
 $vnetName - "VNet1"
 $subnetName = "Subnet1"
 
-# Create a resource group
-New-AzResourceGroup -Name $resourceGroupName -Location $location
-
 # Create the VNet
 $vnet1 = New-AzVirtualNetwork -Name $vnetName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix "10.1.0.0/16"
 

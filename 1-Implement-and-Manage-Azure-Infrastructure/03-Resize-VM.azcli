@@ -1,0 +1,14 @@
+resourceGroup="rg-eu-vms"
+vmName="vm1"
+newSize="Standard_DS3_V2"
+
+# List the VM sizes that are available on the hardware cluster where the VM is hosted.
+az vm list-vm-resize-options --resource-group $resourceGroup --name $vmName --output table
+
+# if the size you want is listed, run the following commands to resize the VM
+az vm resize --resource-group myResourceGroup --name myVM --size $newSize
+
+# If the size you want is not listed, run the following commands to deallocate the VM, resize it, and restart the VM. Replace <newVMsize> with the size you want.
+az vm deallocate --resource-group $resourceGroup --name $vmName
+az vm resize --resource-group $resourceGroup --name $vmName --size $newSize
+az vm start --resource-group $resourceGroup --name $vmName

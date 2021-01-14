@@ -1,0 +1,29 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": {
+            "value": "mkarmdev"
+        },
+        "location": {
+            "value": "[resourceGroup().location]"
+        },
+        "vmSize": {
+            "value": "Standard_A2_v2"
+        },
+        "windowsOSVersion": {
+            "value": "2016-Datacenter"
+        },
+        "adminUsername": {
+            "value": "azureuser"
+        },
+        "adminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/<ID>/resourceGroups/<RG>/providers/Microsoft.KeyVault/vaults/<NAME>"
+                },
+                "secretName": "vmAdminPassword"
+            }
+        }
+    }
+}
