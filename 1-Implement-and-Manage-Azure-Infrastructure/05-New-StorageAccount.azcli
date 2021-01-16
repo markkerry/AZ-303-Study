@@ -1,0 +1,8 @@
+storageAccountName="stgmk64645353282"
+rgName="rg-eu-stg"
+
+# Check the 
+az storage account check-name --name $storageAccountName
+
+# Create the storage account
+az storage account create --name $storageAccountName --resource-group $rgName --location westeurope --sku Standard_LRS --kind StorageV2

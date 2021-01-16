@@ -1,6 +1,6 @@
 resourceGroup="rg-eu-vms"
-vmName="vm1"
-newSize="Standard_DS3_V2"
+vmName="vm2"
+newSize="Standard_DS1_V2"
 
 # List the VM sizes that are available on the hardware cluster where the VM is hosted.
 az vm list-vm-resize-options --resource-group $resourceGroup --name $vmName --output table

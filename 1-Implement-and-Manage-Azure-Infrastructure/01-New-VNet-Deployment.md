@@ -1,4 +1,4 @@
-# Deploy and ARM template to a Resource Group
+# Deploy an ARM template to a Resource Group
 
 ## Az PowerShell
 

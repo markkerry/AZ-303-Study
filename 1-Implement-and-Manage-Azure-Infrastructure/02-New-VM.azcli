@@ -1,12 +1,15 @@
 # Create a new Ubuntu VM
+# Run from CloudShell - bash
 
 rgName="rg-eu-vms"
+vnetRgName="rg-eu-vnet"
 vmName="vm2"
-vnetName="VNet1"
-subnetName="Subnet1"
+vnetName="vnet1"
+subnetName="subnet2"
 nicName="vm2-NIC"
 
-az network nic create --resource-group $rgName --name $nicName --vnet-name $vnetName --subnet $subnetName
+# Export the subnet id
+export subnetId =$(az network vnet subnet show --resource-group $vnetRgName --name $subnetName --vnet-name $vnetName --query id -o tsv)
 
 # az vm create --resource-group $rgName --name $vmName --nics $nicName --image win2019datacenter --admin-username azureuser --admin-password "SecurePassword" --size Basic_A1
-az vm create --resource-group $rgName --name $vmName --nics $nicName --image UbuntuLTS --admin-username azureuser --size Basic_A1 --generate-ssh-keys
+az vm create --name $vmName --resource-group $rgName --image UbuntuLTS --size Standard_DS1_v2 --subnet $subnetId --admin-username azureuser --generate-ssh-keys

@@ -14,6 +14,7 @@ $vmComputerName = "vm1"
 # Define the following parameters for the Azure resources.
 $azureLocation = "westeurope"
 $azureResourceGroup = "rg-eu-vms"
+$azureVnetResourceGroup = "rg-eu-vms"
 $azureVmName = "vm1"
 $azureVmOsDiskName = "vm1-OS-disk"
 $azureVmSize = "Standard_DS1_v2"
@@ -23,8 +24,8 @@ $azureNicName = "vm1-NIC"
 $azurePublicIpName = "vm1-pip"
 
 # Define the existing VNet information.
-$azureVnetName = "VNet1"
-$azureVnetSubnetName = "Subnet1"
+$azureVnetName = "vnet1"
+$azureVnetSubnetName = "subnet1"
 
 # Define the VM marketplace image details.
 $azureVmPublisherName = "MicrosoftWindowsServer"
@@ -32,7 +33,7 @@ $azureVmOffer = "WindowsServer"
 $azureVmSkus = "2019-Datacenter"
 
 # Get the subnet details for the specified virtual network + subnet combination.
-$azureVnetSubnet = (Get-AzVirtualNetwork -Name $azureVnetName -ResourceGroupName $azureResourceGroup).Subnets | Where-Object {$_.Name -eq $azureVnetSubnetName}
+$azureVnetSubnet = (Get-AzVirtualNetwork -Name $azureVnetName -ResourceGroupName $azureVnetResourceGroup).Subnets | Where-Object {$_.Name -eq $azureVnetSubnetName}
 
 # Create the public IP address.
 $azurePublicIp = New-AzPublicIpAddress -Name $azurePublicIpName -ResourceGroupName $azureResourceGroup -Location $azureLocation -AllocationMethod Dynamic

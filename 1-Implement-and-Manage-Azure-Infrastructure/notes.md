@@ -60,6 +60,13 @@ VM sizes can be changed after creation but require a restart. Available sizes de
 
 Some machines may also be unavailable if you have exceeded your Subscription's usage and quota limit which has been set by Microsoft. A request to increase has to be raised.
 
+### Stop and Deallocate a VM
+
+```python
+az vm stop -g rg-eu-vms -n vm1
+az vm deallocate -g rg-eu-vms -n vm1
+```
+
 ## Virtual Machine Storage
 
 __Unmanaged__
@@ -106,3 +113,29 @@ The following services are available to __Storage Accounts__:
 | Performance Tier | Performance characteristics      |
 | Replication      | Redundancy and high availability |
 | Access Tier      | Affects pricing. Hot or cold     |
+
+| Account Kind               | Description                                      |
+| -------------------------- | ------------------------------------------------ |
+| GPv2                       | Recommended for blobs, files, queues, and tables |
+| GPv1                       | Legacy for the above                             |
+| BlobStorage                | Legacy only supports blobs                       |
+| BlockBlobStorage (Premium) | Blob only type, premium performance tier         |
+| File Storage (Premium)     | Files only type, premium performance tier        |
+
+| Performance Tier | Description                            |
+| ---------------- | -------------------------------------- |
+| Standard         | Default with speeds for most workloads |
+| Premium          | High performance specific workloads, GPv1 & 2 for unmanaged disks and page blobs only, BlobStorage not supported, BlockBLobStorage is block and append blobs only, FilesStorage for files only |
+
+| Replication                       | Description                                                                |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| Locally-redundant Storage (LRS)   | Synchronous Replication to three other scale units within region. Low cost |
+| Zone-redundant storage (ZRS)      | Synchronous Replication to three availability zones within region          |
+| Geo-redundant storage (GRS)       | Asynchronous Replication to a secondary region                             |
+| Geo-zone-redundant storage (GZRS) | Combination of ZRS and GRS                                                 |
+
+| Access Tier | Description                                                                  |
+| ----------- | ---------------------------------------------------------------------------- |
+| Hot         | Best for when data is modified more frequently                               |
+| Cool        | Cheaper than hot when data is modified less frequently                       |
+| Archive     | Cheapest storage for when data can remain offline for longer periods of time |

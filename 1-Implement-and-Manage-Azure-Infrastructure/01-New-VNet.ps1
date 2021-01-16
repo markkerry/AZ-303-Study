@@ -3,8 +3,8 @@
 
 $resourceGroupName = "rg-eu-vnet"
 $location = "West Europe"
-$vnetName - "VNet1"
-$subnetName = "Subnet1"
+$vnetName = "VNet1"
+$subnetName = "Subnet2"
 
 # Create the VNet
 $vnet1 = New-AzVirtualNetwork -Name $vnetName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix "10.1.0.0/16"

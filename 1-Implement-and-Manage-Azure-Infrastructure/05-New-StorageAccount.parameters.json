@@ -6,7 +6,7 @@
             "value": "mk"
         },
         "location": {
-            "value": "[resourceGroup().location]"
+            "value": "west europe"
         },
         "storageAccountType": {
             "value": "Standard_LRS"

@@ -7,4 +7,4 @@ diskName="vm1-data1-disk"
 az disk create --name $diskName --resource-group $rgName --location "West Europe" --size-gb 10
 
 ## Add to VM
-az vm disk attach --vm-name $vmName --name $diskName --resource-group $rg-eu-vm
+az vm disk attach --vm-name $vmName --name $diskName --resource-group $rgName

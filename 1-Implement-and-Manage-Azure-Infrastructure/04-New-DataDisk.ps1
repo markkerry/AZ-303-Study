@@ -1,12 +1,14 @@
 # Define the following parameters for the Azure resources.
-$azureLocation = "westeurope"
-$azureResourceGroup = "rg-eu-vms"
-$azureVmName = "vm1"
+$rgName = 'rg-eu-vms'
+$vmName = 'vm2'
+$location = 'westeurope'
+$storageType = 'Premium_LRS'
+$dataDiskName  = "vm2-data1-disk"
 
-# Define the following parameters for the Azure resources. Add this to the "#Define the following parameters for the Azure resources." code section.
-$azureVmDataDisk01Name  = "vm1-data1-disk"
+$diskConfig = New-AzDiskConfig -SkuName $storageType -Location $location -CreateOption Empty -DiskSizeGB 10
+$datadisk1 = New-AzDisk -DiskName $dataDiskName -Disk $diskConfig -ResourceGroupName $rgName
 
-# Optionally, add an additional data disk. Add this to the "#Define the parameters for the new virtual machine." code section.
-$vmDataDisk01Config = New-AzDiskConfig -SkuName Standard_LRS -Location $azureLocation -CreateOption Empty -DiskSizeGB 8
-$vmDataDisk01 = New-AzDisk -DiskName $azureVmDataDisk01Name -Disk $vmDataDisk01Config -ResourceGroupName $azureResourceGroup
-Add-AzVMDataDisk -VM $azureVmName  -Name $azureVmDataDisk01Name -CreateOption Attach -ManagedDiskId $vmDataDisk01.Id -Lun 0
+$vm = Get-AzVM -Name $vmName -ResourceGroupName $rgName
+$vm = Add-AzVMDataDisk -VM $vm -Name $dataDiskName -CreateOption Attach -ManagedDiskId $datadisk1.Id -Lun 1
+
+Update-AzVM -VM $vm -ResourceGroupName $rgName
