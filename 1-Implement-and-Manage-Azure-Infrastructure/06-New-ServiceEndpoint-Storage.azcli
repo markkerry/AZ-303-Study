@@ -1,0 +1,10 @@
+rgName="rg-eu-vnet"
+vnetName="vnet1"
+subnetName="subnet1"
+
+# List services that support service endpoints
+az network vnet list-endpoint-services -o table --location "west europe"
+
+# Add a service endpoint for Microsoft.Storage
+# Configured at the subnet level as configuring a route
+az network vnet subnet update --name $subnetName --vnet-name $vnetName --resource-group $rgName --service-endpoints "Microsoft.Storage"
