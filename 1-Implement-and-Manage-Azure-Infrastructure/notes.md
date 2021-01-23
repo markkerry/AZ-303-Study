@@ -127,12 +127,14 @@ The following services are available to __Storage Accounts__:
 | Standard         | Default with speeds for most workloads |
 | Premium          | High performance specific workloads, GPv1 & 2 for unmanaged disks and page blobs only, BlobStorage not supported, BlockBLobStorage is block and append blobs only, FilesStorage for files only |
 
-| Replication                       | Description                                                                |
-| --------------------------------- | -------------------------------------------------------------------------- |
-| Locally-redundant Storage (LRS)   | Synchronous Replication to three other scale units within region. Low cost |
-| Zone-redundant storage (ZRS)      | Synchronous Replication to three availability zones within region          |
-| Geo-redundant storage (GRS)       | Asynchronous Replication to a secondary region                             |
-| Geo-zone-redundant storage (GZRS) | Combination of ZRS and GRS                                                 |
+| Replication                       | Description                                                                                                |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Locally-redundant Storage (LRS)   | Synchronous Replication to three other scale units within region. Low cost                                 |
+| Zone-redundant storage (ZRS)      | Synchronous Replication to three availability zones within region                                          |
+| Geo-redundant storage (GRS)       | Asynchronous Replication to a secondary region. Also includes synchronous replication to physical location |
+| Geo-zone-redundant storage (GZRS) | Combination of ZRS and GRS. Asynchronous to another region, synchronous to 2 AZ in same region             |
+
+> _Note: __GRS__ and __GZRS__ are also available for READ ACCESS (__RA-GRS__ / __RA-GZRS__). This is intended to improve read performance of applications by providing RA through the secondary region._ 
 
 | Access Tier | Description                                                                  |
 | ----------- | ---------------------------------------------------------------------------- |
@@ -389,6 +391,8 @@ Can then select additional managed disks.
 Select the VNet and you can edit the NIC and enable a public IP address (Not likely to be needed as using a lb), select yes or no to a LB
 Select the instance count (0 to create the VMSS without any instances initially), manual or custom __scaling policy__, and a __Scale-In policy__
 
+Also what's more likely in the real world is a post deployment script. These can be added to a SA and added as an __Extension__ in the VMSS. Any instances added will install the script, post deployment.
+
 The Scaling Policy setting windows is where you can manually specify the instance count or select Custom autoscale and specify the min/max/default numbers.
 The Scale mode based on a metric can be specified in the default profile. Add a rule. Increase when __Percentage CPU__ Greater than 70% for 10 mins. Increase account by 1. Cool down (minutes) means wait x minutes for the metric to come down before scaling again.
 
@@ -421,3 +425,106 @@ After it is created go to instances and Add VMs. The VMs you create must match t
 Encryption of data on Managed Disk volumes. Different from Storage Service Encryption which is how Storage Accounts are encrypted. Azure managed disks do ultimately end up on Azure Storage Service. Storage Service Encryption is encryption of the physical hardware, if stolen would not be accessible. Azure Disk Encryption is at an OS level if the subscription was hacked. Only the OS can access the data. It's encryption of boot (OS) and data volumes with support for BitLocker. Supports some Linux distros using DM-Crypt. It relies on Key Vault for storing encryption info. Does not support Ephemeral OS disks.
 
 Can be enabled per VM or VMSS. A VM Extension configures OS encryption - Linux DM-Crypt and Windows BitLocker. KeyVault to encrypt, decrypt. Open the VM and the Extensions page. You will see the AzureDiskEncryption extension
+
+## Storage Accounts Continued
+
+### Storage Account Replication
+
+Synchronous and Asynchronous replication. When __Synchronous__ is used, it means that after data is written to a container, MS replicates that to 3 the other hosts/regions (LRS or GRS), before the solution is told the data is written successfully. With __Asynchronous__, the data is written, then you can add another file, before MS replicates to the or hosts. There is a lag time in the replication so more efficient for you. LRS is OK for Synchronous but across regions, Asynchronous is best.
+
+Storage account replication is data redundancy for protection against failure. It is not a backup solution. It facilitates Azure SLAs. Have to decide the options available; cost vs protection.
+
+Disaster Scenarios:
+
+| Scenario                          | LRS | ZRS | GRS | GZRS |
+| --------------------------------- | --- | --- | --- | ---- |
+| Node failure within a data centre | Yes | Yes | Yes | Yes  |
+| Entire data centre failure        | No  | Yes | Yes | Yes  |
+| Region-wide outage                | No  | No  | Yes | Yes  |
+
+Forced Failover - Updates DNS records for the secondary endpoint in another region so that the secondary endpoint becomes the primary. This can result in data loss. Can estimate the extend of data loss by checking the Last Sync Time property for the SA. This is only supported for GRS or RA-GRS. The failover will convert the account to LRS.
+
+### AAD Authentication for Storage Accounts
+
+In order for you app to access a SA, you first have to create an app registration in AAD. This creates a Security Principal which is the identity in AAD which represents a user, application, or security group. For the SP you can now create RBAC roles for Blobs or Queues etc. RBAC defines the permissions an identity has for performing actions on blobs or queues. The RBAC roles assigned to a SP must have a defined scope. E.g. the entire subscription, the resource group, a resource, or a particular service within a resource.
+
+AAD -> App registrations -> register an application -> Name it e.g. "New icon from png app" -> leave default options and click Register
+
+Go back to you SA, then service e.g. Queues -> open Access Controls (IAM) -> Add -> Add role assignment -> select role (e.g. Storage Queue Data Contributor) -> select the SP/app registration (New icon from png app) -> Save
+
+How the Authentication works:
+
+1. In order for the next steps to work first you have to open the SP in AAD, click Certificates and secrets and upload a __certificate__ or create a new __client secret__. Create a new secret -> Name it -> set the expires time (1 yr, 2yr, or never).
+2. After the App's SP identity is authenticated with AAD, an OAuth 2.0 token is returned from AAD.
+3. App then requests access to the Queue storage service using the SP's OAuth 2.0 token. If authorised the request is completed.
+
+A __User Delegation SAS__ is a Service SAS which is signed by AAD instead of being signed by an Access Key. It's signed by the SP. You need to assign the SP specific permissions. If you assign your SP _Microsoft.Storage/storageAccounts/blobServices/generateUserDelegationKey_ permission, for you blob storage service, it will have the ability to create the SAS which can  be granted access to blob storage account. Note: the User Delegation SAS cannot be given more access than the SP that created the SAS currently has.
+
+## Automated Deployments
+
+### ARM Templates
+
+IaC with ARM templates in JSON are declarative. Achieve consistent deployments with clearly defined inputs and outputs. Allows to automate and orchestrate scripts and Azure services.
+
+Template Structure:
+
+* Schema and content version - details describing the version and format of the template, used by Microsoft to define the template structure
+* Parameter - Custom values you can use at deployment time to change what is being deployed. e.g Name, location.
+* Variables - Values used within the template, helps simplify the template usability and readability.
+* Resources - Where resources we want to deploy are specified.
+* Outputs - Allow you to return values from the ARM template deployment. E.g Public IP address which was created
+* Functions - Can create user defined functions, different from the standard built in ones.
+
+There are two different deployment modes: __Complete__ and __Incremental__. If you are deploying an ARM template to a resource group with resources already in it and define __Complete__ deployment mode, all the existing resources which are not in the template will be deleted from the RG. __Incremental__ is the default deployment mode and only resources in the template are deployed, existing resources are not affected unless they are defined in the template and are different to what is defined in the template. E.g. add a data disk.
+
+After deploying an ARM template you can check the deployments section of the RG to see past and present deployments, including access to the ARM templates which were used. Or you can open the the __Export template__ if changes have been made since. This is a snapshot of the current configuration. Can be used to generate an ARM template of a RG which wasn't originally deployed by ARM template. It's very verbose with naming and explicit references to subscriptions and resources.
+
+There's a __Templates__ section in Azure where you can store and share templates.
+
+### Managed VM Images
+
+Custom VM images to deploy pre-configured VMs. Such as patches or software like IIS. Can preconfigure settings like security and firewalls. Really common use case is with VMSS. Or that any VM deployed has all your apps and configuration already set in the image.
+
+1. Prepare the VM. Include all software, updates, and configurations.
+2. Generalize the VM
+
+Windows
+
+```cmd
+%windir%\system32\sysprep\sysprep.exe /generalize /shutdown /oobe
+```
+
+Linux
+
+```bash
+sudo waagent -deprovision+user
+```
+
+3. Then you can convert (capture) the VM to an image in the portal. After that you can now longer use the source VM. Select the name of the image and the RG. Enter the Name of the existing VM (confirms we know the VM will be deleted after) and click create.
+4. To deploy the VM from the portal, search for __Images__ -> and ensure image is there. Go back to all resources and create new Virtual Machine, select Browse public and private images.
+
+If you do not want to bake too much into your image, you can deploy a __Custom Script Extension__ to deploy after the machine provisions to complete any configuration.
+
+### Azure Automation Runbooks
+
+Cloud-based process orchestration and automation management, including a range of features such as:
+
+* Graphical workflow management (PowerShell)
+* Support for PowerShell and Python
+* Simplify orchestration of complex multi-step processes.
+
+Automation Account - A container for all process automation and orchestration. Includes an associated __Run As__ account, and shared resources.
+Automation Runbooks - Contains a series of tasks to perform, as defined graphically or through scripts. PowerShell or Python.
+Automation Worker - Azure Sandbox: Designed for use and authentication against Azure. Hybrid Runbook Worker: Hosted on a computer for us in hybrid scenarios.
+
+By default the Azure Run As account has full access to interact with all resources within the subscription. This is a security concern for some.
+
+In the Automation Account -> Shared Resources -> Connections -> Here you will see the AzureRunAsConnection Service Principal. Also Shared Resources are __Python 2 packages__ and __Modules__ (PowerShell). Here you can have module for you code to import. In Modules you will see the new Az modules and legacy AzureRM modules. If you do not see them you will need to install them.
+
+In Runbooks -> Create a runbook -> Type: PowerShell, Python, Graphical
+
+In Runbooks ->  Select the Runbook -> click Start
+
+The Hybrid Runbook Worker can manage on-premises machines.
+
+The Schedules sections allows you to specify a time and link Runbooks. Once or re-occurring 

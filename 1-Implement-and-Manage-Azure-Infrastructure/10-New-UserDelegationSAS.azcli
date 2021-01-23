@@ -1,0 +1,16 @@
+stgName="azstgnamegagprkfvpg4c2"
+rgName="rg-eu-stg"
+
+# Create a User Delegation SAS
+# Set expiry not more than 7 days from current date. Format: YYYY-MM-DD
+az storage blob generate-sas --account-name $stgName \
+--container-name container1 \
+--name filename.log \
+--permissions acdrw \
+--expiry 2021-01-25 \
+--auth-mode login \
+--as-user \
+--full-uri
+
+# Revoke all User Delegation SAS keys at the storage account level
+az storage account revoke-delegation-keys --name $stgName --resource-group $rgName
