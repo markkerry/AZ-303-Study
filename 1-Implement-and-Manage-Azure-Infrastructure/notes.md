@@ -528,3 +528,191 @@ In Runbooks ->  Select the Runbook -> click Start
 The Hybrid Runbook Worker can manage on-premises machines.
 
 The Schedules sections allows you to specify a time and link Runbooks. Once or re-occurring 
+
+## Azure Active Directory Service
+
+### AAD Self-Service Password Reset
+
+### Azure MFA
+
+### AAD Identity Protection
+
+### Conditional Access
+
+Flexible but appropriate security. MFA and Identity Protection policies are not as flexible and are a "apply to all" policy. CA provides:
+
+* Security controls which consider user details like devices and user location
+* The ability to require more or less security for different apps or users.
+
+#### CA Policies
+
+Signal - The range includes group membership, IP location, device used, and risk levels
+Decision - Access can be blocked, or further conditions can be imposed
+Enforcement - CA policies can enforce access control for a range of different scenarios.
+
+When getting started with a new tenant and CA policies, you may have to go to AAD - > Properties -> Manage Security defaults -> Select No for Enable Security defaults
+
+AAD Portal -> Azure AD Conditional Access -> Named Locations (Add IP ranges or countries/regions then mark as trusted) -> Back to VPN Connectivity (can add a certificate for Always on VPN) -> Back to New Policy
+
+Assignments - Users and groups - Include (None, All Users, or selected users and groups) or Exclude
+Assignments - Cloud apps or actions - Include (None, All cloud apps, or select apps) or Exclude
+Assignments - Conditions - Sign-in risk, Device Platforms (All Devices), Locations (Named locations), Client Apps, and Device State
+Access controls - Grant - Block access/Grant access (Require MFA, Require device marked as compliant, Require Hybrid AD Joined device, require approved client app, require app protection policy)
+Session - Use Conditional Access App control, Sign-in frequency, Persistent browser session.
+Enable Policy - On, Off or Report Only (Good starting point)
+
+Under the policies there is a __What If__ section. Here you can app a user and app, add a location etc. Then test what is going to happen.
+
+### Hybrid Identities with AAD Connect
+
+Seamless access to cloud and on-premises resources for users. Hybrid identities helps:
+
+* Simplify the user login experience
+* Simplify the management overhead
+* Control synchronisation and authentication
+
+Identity Synchronisation - Supports SSO
+Authentication Management - Control over how and where authentication occurs
+
+#### Password Hash Sync (PHS)
+
+Synchronising a hash of a hash of the user's password, along with other synchronised identity information. AAD then has a copy of the password and authentication happens against AAD.
+
+Some Key considerations:
+
+* Authentication occurs in the cloud
+* No special network requirements
+* TLS/SSL certs not required
+* Sign-in types: UPN, WIA (Windows Integrated Authentication), and alternate login ID
+* Account Control: Limited, only support for disabled accounts (Unlike ADFS as more control with On-premises AD policies)
+* MFA support: only Azure MFA
+
+Deployment considerations:
+
+* Custom domain added and verified in AAD
+* AAD Connect installed on Server 2012 or later (domain joined, not on a DC)
+  * Using PHS option
+  * Enables AAD Connect synchronisation service
+  * Note: This is express installation option
+
+#### Pass-through Authentication (PTA)
+
+Identities synchronised from on-premises to AAD, however passwords are not synchronised. PTA leverages secure network connectivity to perform authentication on-premises, via a tunnel connected to the cloud.
+
+Some Key considerations:
+
+* Authentication occurs on-premises
+* Network: requires __outbound__ access from authentication agents (permanent OUTBOUND connection from on-premises to Azure)
+* TLS/SSL certs not required
+* Sign-in types: UPN, WIA (Windows Integrated Authentication), and alternate login ID
+* Account Controls: Support for on-premises account control policies
+* MFA support: only Azure MFA
+
+Deployment considerations:
+
+* Custom domain added and verified in AAD
+* AAD Connect installed on Server 2012 or later (domain joined, not on a DC)
+  * Using PTA option
+  * Enables AAD Connect synchronisation service
+* Deploy one or more authentication agents
+
+#### Active Directory Federation Services (ADFS)
+
+An identity solution that enables trust between on-premises and cloud identity platforms
+
+Some Key considerations:
+
+* Authentication occurs on-premises
+* Network: requires __Inbound__ connection to on-premises
+* TLS/SSL certs are required
+* Sign-in types: Additional types such as, sAMAccountName + password, and certificate + smart card authentication
+* Account Controls: Full on-premises account control policies
+* MFA support: Azure MFA, Azure MFA Server, 3rd party
+
+Deployment considerations:
+
+* Custom domain added and verified in AAD
+* AAD Connect installed on Server 2012 __R2__ or later (domain joined, not on a DC)
+  * Using ADFS hybrid identity option
+  * Enables AAD Connect synchronisation service
+* Deploy one or more ADFS servers
+* Deploy one or more ADFS Web Application Proxies
+
+### Implementing AAD Connect
+
+Ensure custom domain name is added and verified first in AAD.
+
+Active Directory Domains and Trusts -> right click Properties -> add the custom domain as an Alternate UPN suffix
+
+All AD users require their UPN set with the custom domain name
+
+Azure Portal -> AAD -> Azure AD Connect -> Download Azure AD Connect
+
+On another domain joined server (Not a DC) -> Install the AzureADConnect.msi -> Open Azure AD Connect software -> __Use express settings__ if setting up password hash sync (PHS) or __Customise__ if setting up PTA or ADFS
+
+Customise -> Install -> Choose either PHS, PTA, ADFS, PingFederate -> Enable Single -sign-on (Seamless single sign-on) -> Next -> Connect to AAD with GA account -> Select AD Forest -> Enter Domain Admin account -> Ensure the AD UPN suffix shows as Verified, leave the attribute to userPrincipalName -> Select sync all domains and OUs or sync selected domains and OUs -> Users are represented only once across all directories -> Synchronise all users and devices -> tick PHS and password writeback -> Enter domain admin account to enable single sign-on -> Tick Start the sync process when configuration completes and click Install.
+
+To troubleshoot, on the AD Connect server open the Synchronisation Service Manager and review the Connector Operations
+
+Back in AAD you can see the sync status of AAD Connect as enabled and last sync time. Users will show in the list and the source of Windows Server AD
+
+## Monitoring
+
+### Azure Monitor
+
+* Capable of monitoring and managing Azure, hybrid, and other cloud environments.
+* Provides top-down monitoring, from Application code, through to the underlying Azure subscription
+* Provides a range of capabilities to act on metrics and log information; alerts, analytics, integration
+
+Monitoring Sources:
+
+* Application
+* Operating System
+* Azure Resources
+* Subscription
+* Azure AD Tenant
+* Custom sources
+
+Monitoring Data:
+
+* Metrics
+* Logs
+
+Actions:
+
+* Alert
+* Export
+* Visualise
+* Insights
+* Integrate
+
+#### Monitoring Data
+
+Metrics - Small time-based data, collected at regular intervals, can include Azure or external data
+Platform Metrics - Originates from Azure, e.g. VM hypervisor metrics
+
+Logs - Large verbose info, collected sporadically, can include Azure or external data
+Platform Logs - Originates from Azure resources, subscriptions, Azured AD, e.g. Key Vault access requests
+
+#### Using Monitoring data
+
+Azure Monitor, Log Analytics, Event Hub, Storage
+
+Metrics
+
+Azure Resources retain data for 93 days through Azure platform. Metrics can be gathered from other sources also. They can be used in following ways:
+
+* Analyse with metrics explorer (Azure Monitor)
+* Visualise and analyse with Log Analytics queues
+* Alert using Action Groups (Azure Monitor)
+* Export or archive (Event Hubs, Azure Storage)
+
+Logs
+
+Azure resource logs are emitted by the Azure platform by default, but require manual configuration for collection. Logs can be gathered from other sources also. Logs can be used in following ways:
+
+* Analysed in detail with Log Analytics queues
+* Archive for long term analysis, auditing, or backup
+* Stream to 3rd party solutions with Event Hubs
+
+Diagnostic Settings define where and what info will be stored. Applied to Subscription, Tenant, and Resources. OS data is gathered through Log Analytics agent. App code through App Insights
