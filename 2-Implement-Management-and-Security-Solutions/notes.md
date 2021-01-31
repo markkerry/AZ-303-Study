@@ -155,3 +155,40 @@ __Assignment__ - Building something with a Blueprint creates an assignment. Prov
 Azure Portal -> Blueprints -> New Definition
 
 ### Azure AD Access Reviews
+
+Provide a simplified approach to manage ongoing access. Key features:
+
+* Removing access which is not longer required
+* Self-service to reduce IT admin workloads
+* Management of AAD and resource access
+
+#### Implementation
+
+__Onboard the AAD tenant__ - Onboarding provides admin consent for the use of Access Reviews, per tenant. AAD P2 licensing is required.
+__Access Reviews__ - Supports security group and app reviews. Supports reviewers such as self, owner, etc. Access is reviewed through the Access Pane
+__AAD Privileged Role Reviews__ - Supports AAD role reviews. Currently is reviewed through AAD PIM. Access is reviewed through the portal
+
+For standard users
+
+Azure Portal -> AAD -> Identity Governance -> create an access review -> Name it, select start date, frequency, select end date (for people to respond), add group/app, Select group owner/particular member/Members (self) for all users of group -> If reviewers don't respond remove access
+
+For Privileged identities
+
+Azure Portal -> Privileged Identity Management -> AAD roles -> Access Reviews -> create an access review
+
+## VNet Security
+
+### Network Security Groups
+
+Control the flow of traffic across a VNet. Create rules to define what is and is not allowed. Control security at the subnet and NIC layers. Leverage priorities to define complex rules.
+
+__Filtering Traffic__ - What traffic will we allow or deny? This includes source, source port, destination, destination port, and protocol
+__Default Rules__ - NSG rules include several default rules such as "DenyAllInbound". These cannot be deleted, but can be overridden.
+__Priority__ - To support different scenarios, we must define priorities for a rule. The lower the number, the higher the priority.
+__Assignment__ - Assign to a NIC on a VM, or a subnet to apply to all resources within that subnet, if you assign to both they will both take effect.
+
+When it comes to public IP addresses, the Basic SKU allows access without an NSG by default. Wen using the Standard SKU, you have to manually allow access to is via an NSG.
+
+To create an inbound security rule for RDP:
+
+NSG -> Inbound security rule -> Add -> Source: Any, Source port range: *, Destination: Any, Destination port ranges: 3389 (RDP), Protocol: TCP, Action: Allow, Priority: 1000, Name: AllowRDPInBound

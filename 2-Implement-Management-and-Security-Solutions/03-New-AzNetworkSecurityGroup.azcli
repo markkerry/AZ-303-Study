@@ -1,0 +1,14 @@
+nsgName='nsg-eu'
+resourceGroup='rg-eu-vnet'
+
+az network nsg rule create --resource-group $resourceGroup \
+--nsg-name $nsgName \
+--name AllowHTTP \
+--access Allow \
+--protocol Tcp \
+--direction Inbound \
+--priority 150 \
+--source-address-prefix Internet \
+--source-port-range "*" \
+--destination-address-prefix "*" \
+--destination-port-range 80
