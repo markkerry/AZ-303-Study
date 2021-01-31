@@ -707,7 +707,7 @@ Azure Resources retain data for 93 days through Azure platform. Metrics can be g
 * Alert using Action Groups (Azure Monitor)
 * Export or archive (Event Hubs, Azure Storage)
 
-Logs
+Logs (Log Analytics)
 
 Azure resource logs are emitted by the Azure platform by default, but require manual configuration for collection. Logs can be gathered from other sources also. Logs can be used in following ways:
 
@@ -716,3 +716,126 @@ Azure resource logs are emitted by the Azure platform by default, but require ma
 * Stream to 3rd party solutions with Event Hubs
 
 Diagnostic Settings define where and what info will be stored. Applied to Subscription, Tenant, and Resources. OS data is gathered through Log Analytics agent. App code through App Insights
+
+### Activity Logs
+
+Platform logs detailing Azure subscription-level events. Provides insight into operations performed externally (management layer) for Azure resources. Details of write operations for Azure resources (PUT, POST, DELETE operations). Does not include Azure Classic / RDFE model. logs are stored for 90 days.
+
+Azure Portal -> Subscriptions -> Activity log -> select Timespan -> Can add diagnostic settings to send the Log analytics, archive to SA or stream to Event Hubs.
+Azure Portal -> Azure Monitor -> Activity log -> Logs (Log Analytics)
+AAD -> Monitoring / Audit Logs -> Here you'll find info regarding SPNs
+
+### Alerts and Action Groups
+
+Capabilities:
+
+* Alerts - Email, SMS etc. 
+* Advanced automation and integration - E.g. 3rd Part solutions, Azure Automation services
+* Alert management (including severity and logging)
+
+__Alerts__ gather metrics and logs then the Alert Rule (condition that must be met for the alert trigger) triggers the Action Group (email, SMS, Push notification to Azure App, Voice call, call to Function/LogicApp/webhook, ticket to ITSM or Automation Runbook)
+
+Azure Portal -> Azure Monitor -> Alerts -> Create rule -> Resource scope choose Virtual Machine and vm01 (actual VM name) -> Condition choose When Admin Power Off -> Action Group select the action name and Type (Automation Runbook, Function etc) -> Name the Alert and select the RG -> Click Create Alert Rule to finish
+
+### Monitoring Azure Service Health
+
+__Azure Status__ - (status.azure.com) _Global_ view of the health of Azure services across all regions
+
+__Azure Service Health__ - (In the portal, Monitor -> Service Health) _Personalised_ view of the health of Azure services and regions you use. Can also see historical info and root cause of issues. Can add a service health alert.
+
+__Azure Resource Health__ - (In portal, Monitor -> Service Health -> Resource health) Specific information about the health of individual resources.
+
+### Azure Cost Management
+
+Am Azure-specific solution which provides several features:
+
+* Support for a range of Azure billing account types
+* Recommendations for optimising costs (Azure Advisor) - View recommendations to monitor unused resources and optimise costs
+* Cost analysis and reporting - Visualise costs and analyse based on resource, service, tags etc
+* Budgeting and alerts - Create cost thresholds to help avoid accidental over-spend in your subscription
+
+Azure Portal -> Subscription -> Cost Management / Cost analysis
+Azure Portal -> Subscription -> Cost Management / Budgets -> create a budget and set alerts
+Azure Portal -> Subscription -> Cost Management / Advisor recommendations -> Buy VM reserved instance etc
+
+### Log Analytics
+
+Analytics, Insights and management for solutions. Comprehensive analytics which incorporates the full picture for end-to-end analytics:
+
+* Facilitates deep diagnostics and troubleshooting
+* Includes automation and management capabilities
+* Centralised view of data from inside and out
+* Also commonly called "Azure Monitor Logs"
+
+__Workspace__ - This is a centralised repo for storing log and metrics data
+__Data Source__ - Several data sources can be leveraged (AAD tenants and subscriptions, platform metrics and logs, VMs with Log analytics agent installed).
+__Analytics__ - Insights can be gained by analysing end-to-end data. Management and automation also extend these capabilities.
+
+Azure Portal -> Log Analytics Workspace -> Create -> Select subscription, RG, Name it, and Region -> Pricing tier Pay-as-you-go - Review and Create
+
+[Sources of monitoring data for Azure Monitor](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/data-sources)
+
+[Overview of Azure Monitor agents](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/agents-overview#summary-of-agents)
+
+Custom Log Analytics queries can create advanced alerts.
+
+### Azure Monitor Insights
+
+#### VM Insights
+
+AKA "Azure Monitor for Virtual Machines", provides insights for Azure VM and VMSS. Several Windows and Linux OS are supported. The primary features are pre-defined trending performance charts, and dependency map. Implementation requires a Log Analytics Workspace for data storage, the agent deployed to VMs, and dependency agent deployed to VMs.
+
+#### Network Insights
+
+AKA "Azure Monitor for Networks" provides a range of monitoring and reporting without requiring further configuration. The primary features are search and filtering, resource health and metrics, alerts, and dependency view. Implementation requires no special configuration. Note: Network Watcher can be configured (per region, per subscription) to provide additional network monitoring features.
+
+#### Container Insights
+
+Provides end-to-end monitoring and reporting for Azure Kubernetes based clusters. Monitoring controllers, nodes, and container workloads. Integration with Prometheus monitoring.
+
+#### Application Insights
+
+Extensible Application Performance Management (APM) is a service for the live monitoring of applications. Detailed application tracing, user behaviour analytics, application maps, availability tests, and Visual Studio integration.
+
+Azure Portal -> Virtual Machines -> vm01 -> Monitoring / Insights -> Enable -> select workspace -> Then Extensions to see what was provisioned -> back to Insights can see a Map
+
+### Monitoring Security
+
+__Azure Security Centre__ - Prevent, detect and respond to threats that affect your Azure and hybrid (on-premises) environments. Provides a range of recommendations on how to improve security for your environment. Data is gathered for Azure resources by default. Log Analytics can be used for hybrid compute resources. Several options available to take action, from alerts, to automated responses (Automation + Logic Apps).
+
+Azure Portal -> Security Centre -> Pricing and settings -> select subscription -> Free (Azure resources only) and Standard pricing tiers
+
+| Feature                                                                      | Free Tier | Standard Tier |
+| ---------------------------------------------------------------------------- | --------- | ------------- |
+| Continuous assessment and security recommendations                           | Yes       | Yes           |
+| Azure Secure Score                                                           | Yes       | Yes           |
+| Just in time VM Access                                                       | No        | Yes           |
+| Adaptive application controls and network hardening                          | No        | Yes           |
+| Regulatory compliance dashboard and reports                                  | No        | Yes           |
+| Threat protection for Azure VMs and non-Azure servers (including Server EDR) | No        | Yes           |
+| Threat protection for supported PaaS services                                | No        | Yes           |
+
+Azure Security Centre also integrates with Cloud App Security and Defender ATP
+
+Back to Getting started section you can install agents to all virtual machines in a subscription, or through Log Analytics workspace.
+
+Azure Portal -> Security Centre -> Security policy -> View effective policy
+
+__Azure Sentinel__ - Security Information and Event Management (SIEM) / Security Orchestration Automation Response (SOAR) platform that supports a variety of data sources. Requires on-boarding. Many solutions are supported, such as Microsoft 365, Azure ATP, and more.
+
+Azure Portal -> Azure Sentinel -> select the Log Analytics workspace -> Data Connectors -> many services available
+
+### Azure AD Connect Health
+
+Monitoring for AAD Connect synchronisation and infrastructure. Supports Azure AD FS and Azure AD DS. Reporting and alerts
+
+__Synchronisation Monitoring__ - Alerts for sync issues, sync insights (latency, object changes), object-level sync error reporting
+__AD FS Monitoring__ - Monitoring and alerts for infrastructure health, extranet lockout trends, failed sign-ins reporting, usage analytics
+__Azure AD DS Monitoring__ - Monitoring and alerts for infrastructure health, domain controller dashboard, replication status dashboard
+__Implementation__ - Requires AAD P1 or grater, the first Connect Health Agent requires one license, each additional agent requires 25 additional licenses. Requires agent installation on each targeted server.
+
+Azure Portal ->  Azure AD Connect Health -> Can download the health agent
+
+[Monitor AD FS using Azure AD Connect Health](https://docs.microsoft.com/en-us/azure/active-directory/hybrid/how-to-connect-health-adfs)
+
+[Using Azure AD Connect Health with AD DS](https://docs.microsoft.com/en-us/azure/active-directory/hybrid/how-to-connect-health-adds)

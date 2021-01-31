@@ -1,10 +1,10 @@
 # AZ-303-Study
 
----
+__Thomas Maurer Study Guide__ - [AZ-303: Azure Architect Technologies](https://www.thomasmaurer.ch/2020/03/az-303-study-guide-azure-architect-technologies/)
 
-Microsoft Learning - [AZ-303 Github Labs](https://github.com/MicrosoftLearning/AZ-303-Microsoft-Azure-Architect-Technologies)
+__Microsoft Learning__ - [AZ-303: Github Labs](https://github.com/MicrosoftLearning/AZ-303-Microsoft-Azure-Architect-Technologies)
 
-Microsoft Learning Paths
+## Microsoft Learning Paths
 
 * [Architect network infrastructure in Azure](https://docs.microsoft.com/en-us/learn/paths/architect-network-infrastructure/)
 * [Architect storage infrastructure in Azure](https://docs.microsoft.com/en-us/learn/paths/architect-storage-infrastructure/)

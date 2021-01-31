@@ -1,0 +1,1 @@
+New-AzRoleDefinition -InputFile .\01-RBAC-CustomRole.json
