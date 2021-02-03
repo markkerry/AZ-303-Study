@@ -1,0 +1,6 @@
+rgName="rg-eu-vms"
+asgName="vm-asg"
+location="westeurope"
+
+# Create the ASG
+az network asg create -g $rgName -n $asgName -l $location

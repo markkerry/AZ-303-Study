@@ -192,3 +192,104 @@ When it comes to public IP addresses, the Basic SKU allows access without an NSG
 To create an inbound security rule for RDP:
 
 NSG -> Inbound security rule -> Add -> Source: Any, Source port range: *, Destination: Any, Destination port ranges: 3389 (RDP), Protocol: TCP, Action: Allow, Priority: 1000, Name: AllowRDPInBound
+
+### Augmented Security Rules
+
+Simplifies Network Security Rules. We can more logically define security rules to match real-world solutions. Leverage __Service Tags__ for Microsoft services that are otherwise cumbersome to configure. Create and configure __Application Security Groups__ (ASG) that represent our solution network
+
+__Service Tags__ - Represent Microsoft Services. A collection of IP address prefixes that correspond to a specific Azure service. Some of these tags include _ActionGroup_ and _ApiManagement_. These service tags can be used for inbound/outbound rules in NSGs, or Azure Firewall. Instead of you knowing all of these IP addresses MS makes it easy by giving you Service Tags to work with. MS manages the associated IPs of Service Tags as Azure services can regularly change.
+
+Azure Portal -> vm1 -> Networking -> Outbound port rules -> Add outbound port rule -> Destination: Service Tag -> Destination service tag: Storage.WestEurope, ports 80,443
+
+__ASG__ - Logical containers for the network interfaces used in your solution. An ASG can be used easily within NSG rules to simplify the management of security rules for a solution. They're a bit like customer managed Service Tags. All NICs for an ASG must exist in the name VNet. This is also true when an ASG is used in a rule for both source and destination. An ASG requires an NSG
+
+Azure Portal -> vm1 -> Networking -> Outbound port rules -> Add outbound port rule (NSG) -> Destination: ASG -> Select the ASG -> Select destination ports
+
+Now you have to associate resources to the ASG
+
+Cloud Shell -> PowerShell
+
+```powershell
+$rgName = "rg-eu-vms"
+$nicName = "vm1-NIC"
+$asgName = "vm-asg"
+
+$nic = Get-AzNetworkInterface -Name $nicName -ResourceGroupName $rgName
+$asg = Get-AzApplicationSecurityGroup -Name $asgName -ResourceGroupName $rgName
+$nic.IpConfigurations[0].ApplicationSecurityGroups = $asg
+Set-AzNetworkInterface -NetworkInterface $nic
+```
+
+### Azure Firewall
+
+Stateful, Fully managed firewall, purpose-built for Azure including HA and scale. Full support for Azure (VNets, availability Zones, etc). Additional network security capabilities than NSGs, such as support for FQDN filtering (outbound HTTP/S). Standard firewall rules, supporting source, protocols, destination, etc. Configure inbound DNAT and outbound SNAT network address translation (NAT) rules. Threat Intelligence with additional functionality to identify malicious IP addresses and domains. Integration with Azure Monitor logging (archive, streaming and Log Analytics).
+
+1. Configure a VNet - This can be an existing VNet but is often a centralised VNet (hub and spoke) that is connected to your other VNets (an on-premises)
+2. Configure a Subnet - The Azure Firewall must be deployed to a dedicated subnet called _"AzureFirewallSubnet"_. This subnet __must have no associated NSGs__.
+3. Configure Routing - In order to have VNet resources leverage the Azure Firewall, a custom route must direct traffic to the Azure Firewall.
+
+Azure Portal -> vnet1 -> Subnets -> + subnet -> Name: AzureFirewallSubnet -> CIDR block: small such as /26 (enough space to scale) -> NSG: none
+
+Azure Portal -> Firewall -> Create -> RG: same as VNet/subnet -> Name the firewall -> selected region -> select existing VNet -> Firewall public IP: Add new (standard SKU, static assignment)
+
+Azure Portal -> Firewall -> select newly created firewall -> Rules -> NAT rule collection (inbound traffic - e.g. RDP), Network rule collection (outbound traffic - Similar to NSG, port, IP, etc), Application rule collection (outbound traffic - includes FQDN tags, update.microsoft.com, or *.google.com for example)
+
+Create a Route Table, configure a route, next hop is the private IP of the Firewall.
+
+### Azure Bastion
+
+Access your VMs via RDP or SSH over SSL. Azure Bastion helps simplify the security and connectivity of common management protocols. It removes the need for a public IP address for managing VMs in Azure. Continue to use popular RDP/SSH protocols over a secure SSL tunnel. Simplified deployment and security
+
+Implementation
+
+1. Deploy a Bastion Host - Create and deploy to a VNet. Note that a Bastion must be deployed to a subnet called _"AzureBastionSubnet"_
+2. Connect to a VM - Use the Bastion option in the Azure Portal, for both both VMs and instances within a VMSS.
+3. Important considerations - Connectivity requires port 443 outbound, and HTML5 support in a browser.
+
+Azure Portal -> vnet1 -> Subnets -> + subnet -> Name: AzureBastionSubnet -> CIDR block: small such as /27 (at least)
+
+Traffic in the subnet __should not__ be pushed through a route table (Azure Firewall), but can be assigned a NSG.
+
+Azure Portal -> Bastions -> Create Bastion -> Create/select RG -> Name the bastion instance -> Region -> Same VNet as VMs which will use bastion -> Select the AzureBastionSubnet -> Create new public IP
+
+Azure Portal -> Select a machine without a public IP -> Connect -> Bastion -> enter credentials -> opens in new browser windows (allow pop-ups)
+
+## Load Balancing and Security
+
+### Azure Load Balancer
+
+Layer 4 traffic (TCP, UDP) distribution to multiple redundant resources, supporting HA and elasticity. Supports LB capabilities such as session affinity, and health probes. 
+
+Key features:
+
+__Public Load Balancing__ - Public IP, allows access from outside Azure
+
+__Private Load Balancing__ - Internal solutions
+
+__Availability Zones__ - Support of traffic to services that exist across the availability zones. Two modes: Basic and Standard SKUs. HA in Standard SKU
+
+__Health Probes__ - TCP, HTTP, HTTPS probes which define the status of resources within your solution. Basic SKU is TCP and HTTP only. Standard SKU also supports HTTPS probe
+
+__Port Forwarding__ - Configure direct, inbound access to resources that sit behind the load balancer. Can have a LB sit in between tiers so that is where you configure port forwarding. E.g. web tier to SSH into app tier via another LB.
+
+__Outbound Connectivity__ - Control outbound connectivity (SNAT) from resources within your virtual network
+
+Key Components:
+
+__Frontend IP__ - LB has a public or private IP
+
+__Backend Pool__ - The group of resources which will ultimately receive traffic from end-users
+
+__Health Probe__ - Used for determining whether the destination instance is available
+
+__Rules__ - Load balancing or NAT rules to configure inbound/outbound access
+
+Azure Portal -> Load Balancer -> Name, Region -> Type: Internal (VNet private IP) or Public (PIP) -> SKU: Basic or standard (_Basic lb SKU will create basic PIP SKU and same for standard_)-> Create new PIP, Basic, dynamic
+
+Azure Portal -> Load Balancer -> Backend Pool - Name it -> select VNet of resources -> Add the VMs or VMSS (More common)
+
+Azure Portal -> Load Balancer -> Health Probes -> + Add -> Name it -> Protocol: HTTP -> Port: 80 -> Path: / -> Interval (seconds): 5 -> Unhealthy threshold (consecutive failures): 2
+
+Azure Portal -> Load Balancer -> Load balancing rules -> + Add -> Name it -> IPv4 -> Select frontend IP -> TCP -> port 80 -> backend port 80 -> select backend pool -> select health probe -> Session persistence (Sticky): None, Client IP or Client IP and protocol (for sticky session to particular resource) -> Floating IP: disabled (only enable for SQL always on)
+
+[Azure Load Balancer SKUs](https://docs.microsoft.com/en-us/azure/load-balancer/skus)
