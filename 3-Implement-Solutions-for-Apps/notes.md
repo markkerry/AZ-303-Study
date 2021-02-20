@@ -310,3 +310,91 @@ Hosting plans
 Every Function App requires a SA to manage logging and triggers
 
 ## Logic Apps
+
+Use either graphical design or code to build workflows which integrate with and control services in response to triggers. Workflow-as-a-service.
+
+They are primarily made up of triggers and actions. Use Connectors to access data, services, systems. Use Workflow Definition Language (store in JSON).
+
+* __Logic App__ - Deployed as either region-based or Integrated Service Environment (ISE). ISE provides dedicated resources within a VNet.
+* __Workflow__ - Logic Apps are started by triggers (push or pull), which then include one or more actions (to perform a task . call a function, etc).
+* __Connectors__ - Provides access to data, and to perform actions, with other MS or 3rd party services (both inside and outside of Azure).
+
+Azure Portal -> Logic App -> Create -> RG, Name it, Region or ISE, Log Analytics Yes/No -> Create -> Go to Resource -> Logic App Designer
+
+Logic Apps with HTTP triggers can have their URL secured with a SAS Access Key
+
+Under Workflow settings, you can select an Integration account which can be used to manage the B2B artefacts.
+
+## Azure App Service Monitoring
+
+### Monitoring Metrics
+
+* __Azure Monitor__ - App Service leverages Azure Monitor to provide access to metrics (as well as autoscale), for App Services apps
+* __Metrics__ - Available by default and require no additional configuration for your App Service app. E.g. average response time
+* __Quotas__ - Provides a view of the current utilisation of important resources, with respect to App Service Plan limitations
+
+### Monitoring Logs
+
+* __Integrated Logging__ - Azure App Service apps can expose log information both through the platform, as well as through Azure Monitor Logs
+* __Diagnostic Logs__ - Gain access to app, web server, and other log info for your Windows and Linux apps. Can also be forwarded to Log Analytics
+* __Activity Logs__ - For resource events. This includes info about the operations (who/when/what) for your apps.
+
+Azure Portal -> App Service -> Monitoring / Metrics
+
+Azure Portal -> App Service -> Monitoring / Logs (Log Analytics)
+
+Azure Portal -> App Service -> Monitoring / App Service logs (On for Application logging to the App Service's File System or to a blob)
+
+Azure Portal -> App Service -> Activity log
+
+## Application Insights
+
+An Application Performance Management (APM) service, which is targeted at providing developers with advanced monitoring capabilities. Application Insights supports a range of frameworks for solutions hosted in the cloud as well as on-premises.
+
+Key Features
+
+* __Supports Many Environments__ - Solutions built for .NET, Node.js, Java or Python are supported (Wherever the solution is hosted)
+* __Usage Analytics__ - Includes a range of features to understand how users use your app e.g. retention
+* __Metrics__ - Explore metrics over time (metrics explorer) or view them in near-real time (metrics streams)
+* __Application Map__ - View connectivity between components to help understand health and performance
+* __Application Profiler__ - Analyse and trace app performance, and gain an understanding of "hot" code
+* __Alerts__ - For app performance and availability issues
+
+Architecture
+
+* __Application Insights__ - The resource acts as a repository for storing telemetry data for your solution (can be multiple components)
+* __Instrumentation (code)__ - Use a server-side SDK within the app code, which leverages an instrumentation key to point to Application Insights
+* __Instrumentation (codeless) - Some Azure services support Application Insights for your already-deployed app using an agent. Provides less functionality
+
+Azure Portal -> RG, Name it, Region, Resource Mode: Classic -> Create -> Go to resource -> Notice the Instrumentation Key (This is what our app components will use to know where to send data to) and Connection String
+
+You need to add the Application Insights SDK to your code and the configuration needs to point to our instrumentation key. Get that from:
+
+App Service Plan -> Configuration -> Application Settings: Instrumentation Key
+
+## Monitor for Containers
+
+Features
+
+* __Windows and Linux__ - Performance and health monitoring for Kubernetes clusters
+* __Pod Monitoring__ - Gain Insights into the pod performance per node
+* __Node Monitoring__ - Monitor node resource utilisation
+* __Cluster Monitoring__ - Understand cluster behaviour whilst under load (average/peak)
+* __Workload Monitoring__ - Monitor actual workload resource utilisation
+* __Alerts__ - Configure alerts for resource utilisation on nodes/containers
+
+Architecture
+
+* __Container Monitoring__ - Monitor performance for K8s clusters (within Azure and elsewhere), as well as Azure Container Instances
+* __Log Analytics__ - Info is stored after being retrieved from a containerised LA container agent
+* __Monitoring Information__ - Gather performance data (metrics and diagnostics) from controllers, nodes, and containers
+
+Deploy a containerised LA agent to the K8s environment:
+
+Azure Portal -> Kubernetes Service - Monitoring / Insights (Onboard to Azure Monitor for Containers / Log Analytics)
+
+Enable via Azure CLI
+
+```bash
+az aks enable-addons -a monitoring -n aksname -g rgName --workspace-resource-id "/subscriptions/GUID/resourceGroups/rgName/providers/Microsoft.OperationalInsights/workspace/workspaceName"
+```
