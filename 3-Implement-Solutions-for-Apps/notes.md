@@ -129,3 +129,184 @@ Where you deploy an App Service Environment to a Subnet in your VNet. This provi
 
 1. External ASE: uses an Internet accessible IP to provide public access.
 2. Internal ASE: uses an Internal Load Balancer to provide private access.
+
+## Containers in Azure
+
+A Container has the app and dependencies packaged up, ready to be deployed to other machines.
+
+Key Components
+
+* __Dockerfile__ - Define exactly what we want our solution to look like. What OSm what files etc
+* __Container Image__ - Using the Dockerfile we build a Container Image. This is stored in a repository, and is like a VM image. It's what we want to run. It can then be published to a Container Registry.
+* __Container__ - The Container is an instance of a Container Image which is running on a Container Host. It might host a website, process data, etc
+
+Azure Container Services
+
+* __Container Development__ - largely no different than developing for containers which will be hosted elsewhere
+* __Container Registry__ - You can manage your own registry with Azure Container Registry. Microsoft also hosts images in Microsoft Container Registry
+* __Container Hosts__ - Several container hosting services, including Azure App Service, Azure Container Instances, and Azure Kubernetes Service
+
+Example Dockerfile
+
+Image based on nginx. Set the work directory and then copy the "src" folder to the work directory
+
+```dockerfile
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
+COPY ./srv ./
+```
+
+build it
+
+```bash
+docker build --tag simplecontainer1 .
+```
+
+list the container
+
+```bash
+docker image ls
+```
+
+run the container, -d run the image but to detach it from current terminal, -p for port
+
+```bash
+docker run -d -p 8000:80 simplecontainer1
+```
+
+browse to localhost:8000 to view page in the container instance
+
+## Azure Container Registry
+
+* __Container Registry__ - Storage for private Docker container images. Based on Docker Registry 2.0, providing support for Docker and Azure services/tools (behind the scenes they are stored in Azure blobs)
+* __Connectivity__ - Leverages two endpoints over HTTPS port 443:
+  * REST API: for authentication and management
+  * Storage: blob storage for container data
+* __Docker Features__ - Such as namespaces and tagging. Also includes automation capabilities such as ACR Tasks
+
+### Authentication
+
+Azure Container Registry (ACR) supports:
+
+* AAD based authentication, for AAD identities and service principles (users and apps)
+* Admin user, for testing (disabled by default)
+
+### Additional Security
+
+ACR can be secured by:
+
+* Firewall, Private Link, Service Endpoints
+* Data encryption (enabled by default, can use customer managed keys)
+* Using scoped permissions
+
+### Pricing
+
+* __Basic__ - Includes all standard capabilities, however has the least storage and throughput
+* __Standard__ - Additional storage and throughput
+* __Premium__ - Provides additional capabilities (e.g. geo-replication, firewalls) and increased performance/limits
+
+### Create an ACR
+
+Azure Portal -> Container Registry -> Create -> RG, name it (.azurecr.io), region, SKU: Premium -> Networking: Public Endpoint -> Encryption: Enabled, Select identity, from Key Vault, and select the Encryption Key -> Create
+
+Go to Resource -> Networking to modify the who has access, selected networks, set the Firewall etc -> Go back to IAM to select RBAC access -> Back to Access keys, here you can select to enable the Admin user
+
+```bash
+# Get the name, login server and password from the Access Keys page of the ACR
+docker login youracr.azurecr.io --username youracr
+
+# tag the container
+docker tag simplecontainer1 youracr.azurecr.io/sampleimages/simplecontainer1:latest
+
+# Push the previously created container to the ACR. 
+docker push youracr.azurecr.io/sampleimages/simplecontainer1:latest
+```
+
+Azure Portal -> ACR -> Repositories -> sampleimages/simplecontainer1 -> latest
+
+## Azure Container Instances
+
+Architecture:
+
+* __Containers__ - Quick to deploy and fast to start, Azure Container Instances provides basic container functionality. Simple solutions; no orchestration
+* __Networking__ - Deployed with public accessibility (public IP and FQDN). Or deployed to a VNet for private network access. solution.region.azurecontainer.io
+* __Storage__ - Azure Azure Container Instances do not include full cluster functionality, persistent storage is still available using Azure files
+
+Implementation:
+
+* __Container Groups__ - Container Instances run within a Container Group. One container may contain the frontend, the other the backend. Compute, networking, and storage can be configured using YAML or ARM Templates
+* __Restart Policy__
+  * Always: restarts automatically on failure
+  * On failure: restarts on nonzero exit codes
+  * Never: containers will run at least once
+* __Environment Variables__ - Can be used to store information as key/value pairs. This helps with dynamic configuration (e.g. connection strings)
+
+Azure Portal -> Container Instances -> Create -> RG, Container Name, Images source: ACR or Docker Hub, Registry: youracr, Image: sampleimages/simplecontainer1, Image tag: latest, OS: Linux, CPU cores: 1, Memory: 0.5 GiB -> Networking: Public, Create a DNS label: appname.westeurope.azurecontainer.io, Ports/Protocol: 80/TCP -> Advanced: Restart policy: Always -> Create
+
+Export the container as YAML to view
+
+```bash
+# from AZCLI
+az container export -g rg-eu-containers --name container1 -f container.yml
+code container.yaml
+```
+
+## Azure Web App for Containers
+
+| __Web App__                                                      | __Web App for Containers__                                    |
+| ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| Deploy a Web App using code, for a supported runtime environment | Deploy a Web App which is containerised, using your own image |
+| Limited support for 3rd-party / custom dependencies              | Full control over the container image, including dependencies |
+| Requires access to the source code of the solution               | Supports any solution that you can containerise               |
+
+Architecture
+
+* __Resource Group__ - You cannot mix Windows and Linux App Service Plans in the same Resource Group - Region
+* __App Service Plan__ - The underlying infrastructure for your container. Defines all features. Note the OS must support the container image/framework
+* __Web App Container__ - The container for your app, which can be sources from ACR, Docker Hub, or a private docker repo.
+
+Azure Portal -> Web App -> Create -> Docker Container, Linux, region, app service plan SKU and Size -> Docker - Single container, image source: ACR, Select the Registry, Image, Tag created earlier.
+
+## Azure Kubernetes Service
+
+[Network concepts for applications in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/concepts-network)
+
+Key Features:
+
+* __Orchestration__ - Automatic scaling (horizontal pod scaling, cluster autoscaling), node upgrades, etc.
+* __Docker Support__ - Support for Docker images, stored within ACR, or other public/private repositories
+* __Persistent Storage__ - Provide static/dynamic storage volumes for solutions which require static content
+* __AAD Integration__ - Configure an RBAC-enabled cluster for AAD user authentication support
+* __VNet__ - Integrated VNet connectivity, and support for inbound access
+* __Monitoring and Development__ - Advanced monitoring (Azure Monitor Insights) and debugging (Azure Dev Spaces)
+
+Architecture:
+
+* __Kubernetes Cluster__ - Comprised of the master (control pane) and the works (nodes). Within Kubernetes, a pod (app) runs on the worker nodes
+* __Networking__ - Connectivity is established within a VNet using Kubernet networking, or Container Networking Interface (CNI)
+* __Connectivity__ - Services are used to logically group pods for network connectivity (Cluster IP, NodePort, LoadBalancer, ExternalName)
+
+Azure Portal -> Kubernetes Service -> Create -> RG, Cluster Name: aka01, Region, K8s version: 1.16.13 (default), primary node pool: size DS2v2, count 2 -> Node pools: Virtual Nodes Disabled, VMSS Enabled -> Authentication method: SP, RBAC: enabled, Encryption type: at-rest with a platform-managed key -> Networking: basic -> Container monitoring: enabled -> Create
+
+## Azure Functions
+
+* Code which is triggered to run by a range of events, without managing servers
+* Supports C#, F#, PowerShell, JavaScript, and Python
+* Integrates with a number of Azure services allowing both inbound and outbound data flows
+* Enables cost savings (when using the consumption plan) - pay only for execution time
+
+Architecture
+
+* __Trigger__ - What causes the function to run. Timer, HTTP request, or new object in blob storage
+* __Function App__ - Exists within a hosting plan. It contains important properties such as OS, runtime stack.
+* __Bindings__ - Allow inbound and outbound access to resources, e.g. reading blob storage data and writing to table storage. Input and output bindings
+
+Hosting plans
+
+* __Consumption__ - Pay for execution of resources only (execution time, memory used). Scaling is managed automatically for you.
+* __Premium__ - Provides additional features: warm instances, VNet connectivity, unlimited execution, and premium instance sizes.
+* __App Service__ - Leverage dedicated VMs. Useful for custom images or existing underutilised plans.
+
+Every Function App requires a SA to manage logging and triggers
+
+## Logic Apps

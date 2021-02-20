@@ -1,0 +1,21 @@
+rgName="rg-eu-apps"
+appName="mklabwebapp001"
+
+# from the CloudShell make changes to your code
+# code Pages/Index.cshtml
+
+# Create a staging slot
+az webapp deployment slot create --name $appName --resource-group $rgName --slot staging
+
+# publish the updated code to a folder called pub
+dotnet publish -o pub
+
+# Zip for deployment
+cd pub
+zip -r webapp.zip .
+
+# Deploy to the staging slot
+az webapp deployment source config-zip --name $appName --resource-group $rgName --src webapp.zip --slot staging
+
+# Swap staging to production
+az webapp deployment slot swap --name $appName --resource-group $rgName --slot staging --target-slot production

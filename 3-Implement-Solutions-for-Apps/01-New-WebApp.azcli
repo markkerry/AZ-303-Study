@@ -1,0 +1,16 @@
+# New dotnet Web App for an App Service Plan
+rgName="rg-eu-apps"
+appName="mklabwebapp001"
+
+# from Azure CloudShell
+mkdir webapp
+cd webapp
+
+# Create a new web app
+dotnet new webapp
+
+# Build it
+dotnet Build
+
+# Deploy it to a sku with deployment slot functionality
+az webapp up --name $appName --resource-group $rgName --sku s1
