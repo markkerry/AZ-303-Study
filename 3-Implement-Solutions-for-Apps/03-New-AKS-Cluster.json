@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the AKS Cluster"
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "metadata": {
+                "description": "Size of the VM"
+            },
+            "defaultValue": "Standard_A1"
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('clusterName')]",
+            "type": "Microsoft.ContainerService/managedClusters",
+            "apiVersion": "2020-02-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "kubernetesVersion": "1.15.7",
+                "dnsPrefix": "dnsprefix",
+                "agentPoolProfiles": [
+                    {
+                        "name": "agentpool",
+                        "count": 2,
+                        "vmSize": "[parameters('vmSize')]",
+                        "osType": "Linux",
+                        "storageProfile": "ManagedDisks"
+                    }
+                ],
+                "linuxProfile": {
+                    "adminUsername": "adminUserName",
+                    "ssh": {
+                        "publicKeys": [
+                            {
+                                "keyData": "keyData"
+                            }
+                        ]
+                    }
+                },
+                "servicePrincipalProfile": {
+                    "clientId": "servicePrincipalAppId",
+                    "secret": "servicePrincipalAppPassword"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
