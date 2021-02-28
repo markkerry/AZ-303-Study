@@ -25,3 +25,14 @@ __Microsoft Learning__ - [AZ-303: Github Labs](https://github.com/MicrosoftLearn
 [Implement Solutions for Apps](https://github.com/markkerry/AZ-303-Study/tree/main/3-Implement-Solutions-for-Apps/notes.md)
 
 [Implement and Manage Data Platforms](https://github.com/markkerry/AZ-303-Study/tree/main/4-Implement-and-Manage-Data-Platforms/notes.md)
+
+## Further Reading
+
+[How to send Real User Measurements to Azure Traffic Manager using web pages](https://docs.microsoft.com/en-us/azure/traffic-manager/traffic-manager-create-rum-web-pages)
+[Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+[Migrate custom software to Azure App Service using a custom container](https://docs.microsoft.com/en-us/azure/app-service/tutorial-custom-container?pivots=container-linux)
+[Query an Azure Cosmos container](https://docs.microsoft.com/en-us/azure/cosmos-db/how-to-query-container)
+[Development workflow for Docker apps](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/docker-application-development-process/docker-app-development-workflow)
+[Limits and configuration information for Azure Logic Apps](https://docs.microsoft.com/en-us/azure/logic-apps/logic-apps-limits-and-config)
+[Azure Disk Encryption for virtual machines and virtual machine scale sets](https://docs.microsoft.com/en-us/azure/security/fundamentals/azure-disk-encryption-vms-vmss)
+[Monitor virtual machine changes by using Azure Event Grid and Logic Apps](https://docs.microsoft.com/en-us/azure/event-grid/monitor-virtual-machine-changes-event-grid-logic-app)
