@@ -16,6 +16,12 @@ __Microsoft Learning__ - [AZ-303: Github Labs](https://github.com/MicrosoftLearn
 * [Architect API integration in Azure](https://docs.microsoft.com/en-us/learn/paths/architect-api-integration/)
 * [Architect migration, business continuity, and disaster recovery in Azure](https://docs.microsoft.com/en-us/learn/paths/architect-migration-bcdr/)
 
+## Other Courses
+
+Learn Docker by Doing
+Docker - Deep Dive
+CosmosDB Deep Dive
+
 ## Notes
 
 [Implement and Manage Azure Infrastructure](https://github.com/markkerry/AZ-303-Study/tree/main/1-Implement-and-Manage-Azure-Infrastructure/notes.md)
