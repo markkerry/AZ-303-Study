@@ -80,3 +80,9 @@ Specify the working directory
 ```bash
 docker run -it --rm --volume "$(pwd)":/ansible -w /ansible ansible-container
 ```
+
+To run terminal commands on a detached container.
+
+```bash
+docker container exec -it container-name /bin/bash
+```
