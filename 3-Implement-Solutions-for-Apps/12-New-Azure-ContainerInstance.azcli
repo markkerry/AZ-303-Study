@@ -1,0 +1,7 @@
+# Azure CLI
+az container create \
+    --resource-group rg-eu-ci \
+    --name ContainerName \
+    --image <path to image> \
+    --dns-name-label name-container \
+    --ports 80
